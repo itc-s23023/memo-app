@@ -8,7 +8,7 @@ export default function CreatePage() {
   const [newTag, setNewTag] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
   const [memoTitle, setMemoTitle] = useState("");
-  const contentRef = useRef(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // メモの保存
   const saveMemo = () => {
