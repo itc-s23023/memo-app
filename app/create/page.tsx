@@ -56,7 +56,7 @@ export default function CreatePage() {
   };
 
   // タグの削除
-  const removeTag = (tag) => {
+  const removeTag = (tag: string) => {
     const updatedTags = tags.filter((t) => t !== tag);
     setTags(updatedTags);
     if (selectedTag === tag) {
