@@ -46,8 +46,9 @@ export default function CreatePage() {
 
   // タグの追加
   const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      const updatedTags = [...tags, newTag.trim()];
+    const trimmed = newTag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      const updatedTags = [...tags, trimmed];
       setTags(updatedTags);
       setNewTag("");
       // タグをローカルストレージに保存
@@ -67,8 +68,8 @@ export default function CreatePage() {
   };
 
   // リッチテキストエディタの機能
-  const applyFormat = (command: string, value: string | null = null) => {
-    document.execCommand(command, false, value ?? undefined);
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
     contentRef.current?.focus();
   };
 
@@ -83,6 +84,7 @@ export default function CreatePage() {
   // Enterキーでタグ追加
   const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       addTag();
     }
   };

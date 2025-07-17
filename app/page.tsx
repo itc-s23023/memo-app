@@ -11,7 +11,7 @@ export default function ListPageSkeleton() {
   const [selectedTag, setSelectedTag] = useState("");
 
   // メモをタグ別にグループ化する関数（複数タグ対応）
-  const groupMemosByTag = (memoList) => {
+  const groupMemosByTag = (memoList: any[]) => {
     const grouped = {};
     
     memoList.forEach(memo => {
