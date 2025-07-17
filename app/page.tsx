@@ -15,13 +15,14 @@ export default function ListPageSkeleton() {
           className="px-4 py-2 border rounded-full w-full max-w-md shadow-sm text-black"
         />
         <div className="flex items-center gap-2 ml-4">
-          <button className="px-4 py-2 bg-gray-200 rounded shadow hover:bg-gray-300 text-black">
+          <button onClick={() => router.push("./login")}
+          className="px-4 py-2 bg-gray-200 rounded shadow hover:bg-gray-300 text-black">
             ログアウト
           </button>
 
           {/* プラスボタン */}
           <button
-            onClick={() => router.push("./pages/create")}
+            onClick={() => router.push("./create")}
             className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl hover:bg-blue-600"
           >
             ＋
