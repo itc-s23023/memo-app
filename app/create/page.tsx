@@ -67,8 +67,8 @@ export default function CreatePage() {
   };
 
   // リッチテキストエディタの機能
-  const applyFormat = (command, value = null) => {
-    document.execCommand(command, false, value);
+  const applyFormat = (command: string, value: string | null = null) => {
+    document.execCommand(command, false, value ?? undefined);
     contentRef.current?.focus();
   };
 
@@ -81,7 +81,7 @@ export default function CreatePage() {
   }, []);
 
   // Enterキーでタグ追加
-  const handleTagKeyPress = (e) => {
+  const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       addTag();
     }
@@ -179,11 +179,12 @@ export default function CreatePage() {
           contentEditable
           className="min-h-96 outline-none text-black leading-relaxed"
           style={{ minHeight: '24rem' }}
-          placeholder="メモの内容を入力..."
-          onInput={(e) => {
+          data-placeholder="メモの内容を入力..."
+          onInput={(e: React.FormEvent<HTMLDivElement>) => {
+            const target = e.currentTarget;
             // プレースホルダーの処理
-            if (e.target.textContent === '') {
-              e.target.innerHTML = '';
+            if (target.textContent === '') {
+              target.innerHTML = '';
             }
           }}
         />
