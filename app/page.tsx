@@ -1,79 +1,82 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+// 型定義はファイル先頭に
+type Memo = {
+  id: number;
+  title: string;
+  content: string;
+  plainText: string;
+  tag?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt?: string;
+};
+type GroupedMemos = { [tag: string]: Memo[] };
 
 export default function ListPageSkeleton() {
   const router = useRouter();
-  const [memos, setMemos] = useState([]);
-  const [groupedMemos, setGroupedMemos] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredGroupedMemos, setFilteredGroupedMemos] = useState({});
-  const [selectedTag, setSelectedTag] = useState("");
+  const [memos, setMemos] = useState<Memo[]>([]);
+  const [groupedMemos, setGroupedMemos] = useState<GroupedMemos>({});
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredGroupedMemos, setFilteredGroupedMemos] = useState<GroupedMemos>({});
+  const [selectedTag, setSelectedTag] = useState<string>("");
 
   // メモをタグ別にグループ化する関数（複数タグ対応）
-  const groupMemosByTag = (memoList: any[]) => {
-    const grouped = {};
-    
-    memoList.forEach(memo => {
-      // タグが配列の場合とそうでない場合を両方サポート
-      let tags = [];
-      
+  const groupMemosByTag = useCallback((memoList: Memo[]): GroupedMemos => {
+    const grouped: GroupedMemos = {};
+    memoList.forEach((memo: Memo) => {
+      let tags: string[] = [];
       if (Array.isArray(memo.tags)) {
-        tags = memo.tags.filter(tag => tag && tag.trim() !== "");
-      } else if (memo.tag && memo.tag.trim() !== "") {
+        tags = memo.tags.filter((tag: string) => tag && tag.trim() !== "");
+      } else if (memo.tag && typeof memo.tag === "string" && memo.tag.trim() !== "") {
         tags = [memo.tag];
       }
-      
-      // タグがない場合のみ「タグなし」として表示
       if (tags.length === 0) {
-        if (!grouped["タグなし"]) {
-          grouped["タグなし"] = [];
-        }
+        if (!grouped["タグなし"]) grouped["タグなし"] = [];
         grouped["タグなし"].push(memo);
       } else {
-        // 各タグに対してメモを追加
-        tags.forEach(tag => {
-          if (!grouped[tag]) {
-            grouped[tag] = [];
-          }
+        tags.forEach((tag: string) => {
+          if (!grouped[tag]) grouped[tag] = [];
           grouped[tag].push(memo);
         });
       }
     });
-    
     return grouped;
-  };
+  }, []);
 
   // メモを読み込む関数
-  const loadMemos = () => {
-    const savedMemos = JSON.parse(localStorage.getItem('memos') || '[]');
+  // メモを読み込む関数
+  const loadMemos = useCallback(() => {
+    const savedMemos: Memo[] = JSON.parse(localStorage.getItem('memos') || '[]');
     setMemos(savedMemos);
     const grouped = groupMemosByTag(savedMemos);
     setGroupedMemos(grouped);
     setFilteredGroupedMemos(grouped);
-  };
+  }, [groupMemosByTag]);
 
   // 検索機能（テキスト検索とタグ検索）
-  const handleSearch = (term) => {
+  const handleSearch = (term: string) => {
     setSearchTerm(term);
     applyFilters(term, selectedTag);
   };
 
   // タグ検索機能
-  const handleTagFilter = (tag) => {
+  const handleTagFilter = (tag: string) => {
     setSelectedTag(tag);
     applyFilters(searchTerm, tag);
   };
 
   // フィルタリング機能（統合）
-  const applyFilters = (textTerm, tagFilter) => {
-    let filtered = groupedMemos;
+  const applyFilters = (textTerm: string, tagFilter: string) => {
+    let filtered: GroupedMemos = groupedMemos;
 
     // テキスト検索
     if (textTerm && textTerm.trim()) {
-      const textFiltered = {};
+      const textFiltered: GroupedMemos = {};
       Object.entries(groupedMemos).forEach(([tag, tagMemos]) => {
-        const filteredMemos = tagMemos.filter(memo => 
+        const filteredMemos = tagMemos.filter((memo: Memo) => 
           memo.title.toLowerCase().includes(textTerm.toLowerCase()) ||
           memo.plainText.toLowerCase().includes(textTerm.toLowerCase()) ||
           (memo.content && memo.content.toLowerCase().includes(textTerm.toLowerCase()))
@@ -87,7 +90,7 @@ export default function ListPageSkeleton() {
 
     // タグ検索
     if (tagFilter && tagFilter.trim()) {
-      const tagFiltered = {};
+      const tagFiltered: GroupedMemos = {};
       if (filtered[tagFilter]) {
         tagFiltered[tagFilter] = filtered[tagFilter];
       }
@@ -98,12 +101,11 @@ export default function ListPageSkeleton() {
   };
 
   // メモを削除する関数
-  const deleteMemo = (memoId) => {
+  const deleteMemo = (memoId: number) => {
     if (confirm("このメモを削除しますか？")) {
-      const updatedMemos = memos.filter(memo => memo.id !== memoId);
+      const updatedMemos = memos.filter((memo: Memo) => memo.id !== memoId);
       setMemos(updatedMemos);
       localStorage.setItem('memos', JSON.stringify(updatedMemos));
-      
       const grouped = groupMemosByTag(updatedMemos);
       setGroupedMemos(grouped);
       applyFilters(searchTerm, selectedTag);
@@ -113,21 +115,20 @@ export default function ListPageSkeleton() {
   // 初期化時にメモを読み込み
   useEffect(() => {
     loadMemos();
-  }, []);
+  }, [groupMemosByTag, loadMemos]);
 
   // ページに戻ってきたときにメモを再読み込み
   useEffect(() => {
     const handleFocus = () => {
       loadMemos();
     };
-    
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [groupMemosByTag, loadMemos]);
 
   // タグの色を決定する関数
-  const getTagColor = (tag) => {
-    const colors = {
+  const getTagColor = (tag: string) => {
+    const colors: { [key: string]: string } = {
       "学校": "bg-blue-200",
       "買い物": "bg-green-200", 
       "仕事": "bg-red-200",
@@ -140,8 +141,8 @@ export default function ListPageSkeleton() {
   };
 
   // メモカードの色を決定する関数
-  const getMemoCardColor = (tag) => {
-    const colors = {
+  const getMemoCardColor = (tag: string) => {
+    const colors: { [key: string]: string } = {
       "学校": "bg-blue-400",
       "買い物": "bg-green-400",
       "仕事": "bg-red-400", 
@@ -154,22 +155,22 @@ export default function ListPageSkeleton() {
   };
 
   // メモを開く関数
-  const openMemo = (memoId) => {
+  const openMemo = (memoId: number) => {
     router.push(`./edit/${memoId}`);
   };
 
   // 利用可能なタグの一覧を取得
-  const getAllTags = () => {
-    const allTags = new Set();
-    memos.forEach(memo => {
+  const getAllTags = (): string[] => {
+    const allTags = new Set<string>();
+    memos.forEach((memo: Memo) => {
       const tags = getMemoTags(memo);
-      tags.forEach(tag => allTags.add(tag));
+      tags.forEach((tag: string) => allTags.add(tag));
     });
     return Array.from(allTags).sort();
   };
 
   // HTMLタグを除去してプレーンテキストにする関数
-  const stripHtml = (html) => {
+  const stripHtml = (html: string) => {
     if (!html) return '';
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
@@ -177,10 +178,10 @@ export default function ListPageSkeleton() {
   };
 
   // メモのタグを表示する関数
-  const getMemoTags = (memo) => {
+  const getMemoTags = (memo: Memo): string[] => {
     if (Array.isArray(memo.tags)) {
-      return memo.tags.filter(tag => tag && tag.trim() !== "");
-    } else if (memo.tag && memo.tag.trim() !== "") {
+      return memo.tags.filter((tag: string) => tag && tag.trim() !== "");
+    } else if (memo.tag && typeof memo.tag === "string" && memo.tag.trim() !== "") {
       return [memo.tag];
     }
     return [];
